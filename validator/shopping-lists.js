@@ -14,8 +14,8 @@ exports.validateShoppingListCreate = [
     .withMessage("Name is required")
     .isString()
     .withMessage("Name must be a string")
-    .isLength({ max: 80 })
-    .withMessage("Name can be at most 80 characters long"),
+    .isLength({ max: 50 })
+    .withMessage("Name can be at most 50 characters long"),
 ];
 
 exports.validateShoppingListUpdate = [
@@ -29,8 +29,8 @@ exports.validateShoppingListUpdate = [
     .withMessage("Name is required")
     .isString()
     .withMessage("Name must be a string")
-    .isLength({ max: 80 })
-    .withMessage("Name can be at most 80 characters long"),
+    .isLength({ max: 50 })
+    .withMessage("Name can be at most 50 characters long"),
   body("isArchived")
     .notEmpty()
     .withMessage("isArchived is required")
@@ -38,7 +38,7 @@ exports.validateShoppingListUpdate = [
     .withMessage("isArchived must be a boolean"),
 ];
 
-exports.validateShoppingListRemove = [
+exports.validateShoppingListDelete = [
   param("id")
     .notEmpty()
     .withMessage("listId is required")

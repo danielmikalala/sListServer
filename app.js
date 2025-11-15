@@ -5,15 +5,19 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const connectionString = "mongodb+srv://admin:adminadmin@cluster0.cyvx5k9.mongodb.net/?appName=Cluster0";
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const { verifyToken } = require('./middleware/auth');
+
+dotenv.config();
 mongoose.connect(connectionString, {useNewUrlParser: true, useUnifiedTopology: true}).then(() => {
   console.log("MongoDB connection established successfully");
 }).catch((err) => {
   console.error("MongoDB connection error:", err);
 });
 
-
 const listsRouter = require('./routes/shopping-list');
-const usersRouter = require('./routes/users');
+const itemsRouter = require('./routes/item');
+const usersRouter = require('./routes/user');
 
 const app = express();
 
@@ -27,7 +31,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/shopping-lists', listsRouter);
+app.use('/shopping-lists', verifyToken, listsRouter);
+app.use('/items', verifyToken, itemsRouter);
 app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler

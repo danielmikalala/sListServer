@@ -6,11 +6,9 @@ const {
   validateShoppingListCreate,
   validateShoppingListGet,
   validateShoppingListUpdate,
-  validateShoppingListRemove,
+  validateShoppingListDelete,
   validateShoppingListAddMember,
-  validateShoppingListRemoveMember,
-  validateShoppingListAddItem,
-  validateShoppingListRemoveItem,
+  validateShoppingListRemoveMember
 } = require("../validator/shopping-lists");
 
 const {
@@ -18,11 +16,9 @@ const {
   handlerGetShoppingLists,
   handlerGetShoppingList,
   handlerUpdateList,
-  handlerRemoveList,
+  handlerDeleteList,
   handlerAddMember,
-  handlerRemoveMember,
-  handlerAddItem,
-  handlerRemoveItem,
+  handlerRemoveMember
 } = require("../controllers/shopping-lists");
 
 //shows all shopping lists
@@ -33,42 +29,11 @@ router.get("/:id", validateShoppingListGet, inputValidation, handlerGetShoppingL
 router.post("/create", validateShoppingListCreate, inputValidation, handlerCreateList);
 //shopping-list/update
 router.put("/update/:id", validateShoppingListUpdate, inputValidation, handlerUpdateList);
-//shopping-list/remove/:id
-router.delete("/remove/:id", validateShoppingListRemove, inputValidation, handlerRemoveList);
+//shopping-list/delete/:id
+router.delete("/delete/:id", validateShoppingListDelete, inputValidation, handlerDeleteList);
 //shopping-list/addMember/:id
 router.put("/addMember/:id", validateShoppingListAddMember, inputValidation, handlerAddMember);
 //shopping-list/removeMember/:id
 router.put("/removeMember/:id", validateShoppingListRemoveMember, inputValidation, handlerRemoveMember);
-//shopping-list/addItem
-router.put("/addItem", validateShoppingListAddItem, inputValidation, handlerAddItem);
-//shopping-list/removeItem/:id
-router.put("/removeItem/:id", validateShoppingListRemoveItem, inputValidation, handlerRemoveItem);
-
-
-router.put("/:id", async (req, res) => {
-  try {
-    validateShoppingList.validateShoppingListUpdate(req.body);
-  } catch (e) {
-    return res.status(400).json({ error: e.message || "Invalid payload" });
-  }
-
-  dummy.shoppingLists = dummy.shoppingLists || [];
-  const idx = dummy.shoppingLists.findIndex((i) => i.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Not found" });
-
-  const updated = Object.assign({}, dummy.shoppingLists[idx], req.body, {
-    updatedAt: new Date().toISOString(),
-  });
-  dummy.shoppingLists[idx] = updated;
-  res.json(updated);
-});
-
-router.delete("/:id", (req, res) => {
-  dummy.shoppingLists = dummy.shoppingLists || [];
-  const idx = dummy.shoppingLists.findIndex((i) => i.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: "Not found" });
-  dummy.shoppingLists.splice(idx, 1);
-  res.status(204).send();
-});
 
 module.exports = router;

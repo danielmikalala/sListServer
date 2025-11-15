@@ -5,8 +5,7 @@ function nextId() {
 }
 
 function ensureLists() {
-  dummy.lists = dummy.lists || [];
-  return dummy.lists;
+  return dummy.lists || [];
 }
 
 function ensureUsers() {
@@ -15,7 +14,14 @@ function ensureUsers() {
 
 exports.handlerGetShoppingLists = (req, res) => {
   try {
-    res.json(ensureLists());
+    const lists = ensureLists();
+    const userId = req.userId;
+
+    const userLists = lists.filter(
+      (l) => l.ownerId === userId || (l.members && l.members.includes(userId))
+    );
+
+    res.json(userLists);
   } catch (e) {
     res.status(500).json({ error: e.message || "Internal server error" });
   }
@@ -35,13 +41,12 @@ exports.handlerGetShoppingList = (req, res) => {
 exports.handlerCreateList = (req, res) => {
   try {
     const lists = ensureLists();
-    const users = dummy.users || [];
-    const randomUser = users[Math.floor(Math.random() * users.length)];
+    const userId = req.userId; 
     const newObject = Object.assign(
       {
         id: nextId(),
-        name: req.name,
-        ownerId: randomUser.id,
+        name: req.body.name,
+        ownerId: userId,
         members: [],
         items: [],
         isArchived: false,
@@ -58,12 +63,21 @@ exports.handlerCreateList = (req, res) => {
 exports.handlerUpdateList = (req, res) => {
   try {
     const lists = ensureLists();
-    const idx = lists.findIndex(
-      (l) => l.id === req.params.id || l.id === req.body.listId
-    );
+    const id = req.params.id || req.body.listId;
+    const idx = lists.findIndex((l) => l.id === id);
     if (idx === -1) return res.status(404).json({ error: "Not found" });
 
-    const updated = Object.assign({}, lists[idx], req.body);
+    const list = lists[idx];
+    if (list.ownerId !== req.userId) {
+      return res.status(403).json({ error: "Forbidden: only owner can update the list" });
+    }
+
+    const updated = Object.assign({}, list, req.body);
+    updated.id = list.id;
+    updated.ownerId = list.ownerId;
+    updated.members = Array.isArray(updated.members) ? updated.members : list.members || [];
+    updated.items = Array.isArray(updated.items) ? updated.items : list.items || [];
+
     lists[idx] = updated;
     res.json(updated);
   } catch (e) {
@@ -71,15 +85,14 @@ exports.handlerUpdateList = (req, res) => {
   }
 };
 
-exports.handlerRemoveList = (req, res) => {
+exports.handlerDeleteList = (req, res) => {
   try {
     const lists = ensureLists();
     const id = req.params.id || req.body.listId;
     const idx = lists.findIndex((l) => l.id === id);
     if (idx === -1) return res.status(404).json({ error: "Not found" });
     lists.splice(idx, 1);
-    res.status(204).send();
-    return id;
+    res.status(204).send(id);
   } catch (e) {
     res.status(500).json({ error: e.message || "Internal server error" });
   }
